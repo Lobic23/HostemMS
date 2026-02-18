@@ -1,0 +1,30 @@
+meta {
+  name: update
+  type: http
+  seq: 6
+}
+
+patch {
+  url: http://localhost:3000/users/:id
+  body: json
+  auth: inherit
+}
+
+params:path {
+  id: wg2dpw
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Jane Doe"
+  }
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}
