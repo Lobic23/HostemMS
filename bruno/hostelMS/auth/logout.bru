@@ -1,0 +1,20 @@
+meta {
+  name: logout
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{url}}/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNjM5ZDUzLTJjZWItNGQ2Ni1iMWM0LTliYeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNjM5ZDUzLTJjZWItNGQ2Ni1iMWM0LTliYjdiMGIxYTJhYSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzcyMjEwNDk2LCJleHAiOjE3NzI4MTUyOTZ9.siIrrWrgdZafVJn-Zj0eqlvOtWLs2zZAO_GvWziX7yEjdiMGIxYTJhYSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzcyMjEwMjYwLCJleHAiOjE3NzI4MTUwNjB9.R_SFgmzUQMP-_2URbodwc6BbWskkufmyxlY8SkQw2jY
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

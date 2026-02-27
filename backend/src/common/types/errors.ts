@@ -1,31 +1,32 @@
 export class AppError extends Error {
   constructor(
     public statusCode: number,
-    public message: string,
-    public isOperational = true,
+    message: string,
+    public isOperational: boolean = true,
   ) {
     super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
-}
+    this.name = this.constructor.name;
 
-export class NotFoundError extends AppError {
-  constructor(message = "Resource not found") {
-    super(404, message);
-    Object.setPrototypeOf(this, NotFoundError.prototype);
+    Error.captureStackTrace(this, this.constructor);
   }
-}
 
-export class ValidationError extends AppError {
-  constructor(message = "Validation failed") {
-    super(400, message);
-    Object.setPrototypeOf(this, ValidationError.prototype);
+  static badRequest(message = "Bad request") {
+    return new AppError(400, message);
   }
-}
 
-export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized") {
-    super(401, message);
-    Object.setPrototypeOf(this, UnauthorizedError.prototype);
+  static unauthorized(message = "Unauthorized") {
+    return new AppError(401, message);
+  }
+
+  static forbidden(message = "Forbidden") {
+    return new AppError(403, message);
+  }
+
+  static notFound(message = "Resource not found") {
+    return new AppError(404, message);
+  }
+
+  static invalid(message = "Validation failed") {
+    return new AppError(404, message);
   }
 }

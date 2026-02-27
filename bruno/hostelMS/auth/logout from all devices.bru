@@ -1,0 +1,20 @@
+meta {
+  name: logout from all devices
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{url}}/auth/logout-all
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNjM5ZDUzLTJjZWItNGQ2Ni1iMWM0LTliYjdiMGIxYTJhYSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzcyMjEwNzcyLCJleHAiOjE3NzIyMTE2NzJ9.4rFWsli5WT0DTCwsJXQfgKR_eFEHVOdH5nPuUmG0jOg
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../types/errors";
-import { config } from "../../config";
+import { env } from "@/config/env";
+
 
 export const errorHandler = (
-  err: Error,
+  err: unknown,
   _req: Request,
   res: Response,
   _next: NextFunction,
@@ -12,16 +13,18 @@ export const errorHandler = (
     res.status(err.statusCode).json({
       status: "error",
       message: err.message,
-      // ...(config.isDevelopment && { stack: err.stack }),
+      // ...(env.isDevelopment && { stack: err.stack }),
     });
     return;
   }
 
-  // Unhandled errors
-  console.error("[Error Handler] : Unhandled error:", err);
+  console.error("[Unhandled Error]:", err);
+
   res.status(500).json({
     status: "error",
     message: "Internal server error",
-    ...(config.isDevelopment && { stack: err.stack }),
+    ...(env.isDevelopment && {
+      stack: err instanceof Error ? err.stack : undefined,
+    }),
   });
 };
