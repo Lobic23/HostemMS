@@ -3,6 +3,12 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../types/errors";
 
+export const ROLE_HIERARCHY: Record<string, number> = {
+  user: 0,
+  admin: 1,
+  super_admin: 2,
+}
+
 export interface AuthRequest extends Request {
   user?: any;
 }
@@ -36,13 +42,31 @@ export const authenticate = (req: AuthRequest, _res: Response, next: NextFunctio
 };
 
 
-export const authorize = (role: string) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || req.user.role !== role) {
-      res.status(403).json({ message: "Forbidden" });
-      return;
+
+export const authorize = (...roles: string[]) =>
+  (req: AuthRequest, _res: Response, next: NextFunction) => {
+    const userRole = req.user?.role
+
+    if (!userRole || !roles.includes(userRole)) {
+      next(AppError.forbidden())
+      return
     }
 
-    next();
-  };
-};
+    next()
+  }
+
+// use this if you want "at least this level" checks
+export const authorizeMin = (minRole: string) =>
+  (req: AuthRequest, _res: Response, next: NextFunction) => {
+    const userRole = req.user?.role
+    const userLevel = ROLE_HIERARCHY[userRole ?? ''] ?? -1
+    const minLevel = ROLE_HIERARCHY[minRole] ?? 0
+
+    if (userLevel < minLevel) {
+      next(AppError.forbidden())
+      return
+    }
+
+    next()
+  }
+

@@ -1,28 +1,95 @@
 import { Router } from "express";
+import { z } from "zod";
+import { asyncHandler } from "@/common/utils/asyncHandler";
+import { validate } from "@/common/utils/zodValidate";
 import { authenticate, authorize, AuthRequest } from "@/common/middleware/auth";
+import { getAllUsers, getUserById, createUser, updateUser, deleteUser } from "./user.service";
 
 const router = Router();
 
-// Public route — no middleware, anyone can access
-router.get("/public", (_req, res) => {
-  res.json({ message: "Anyone can see this" });
+const createUserDTO = z.object({
+  name: z.string().min(1).max(100),
+  email: z.email("Invalid email address"),
+  password: z.string().min(8).max(128),
+  role: z.enum(["user", "admin", "super_admin"]).default("user"),
 });
 
-// Authenticated route — any logged in user
-router.get("/me", authenticate, (req, res) => {
-  const user = (req as AuthRequest).user;
-  res.json({ message: "Your profile", user });
+const updateUserDTO = z.object({
+  name: z.string().min(1).max(100).optional(),
+  email: z.email("Invalid email address").optional(),
+  password: z.string().min(8).max(128).optional(),
+  role: z.enum(["user", "admin"]).optional(),
 });
 
-// Authorized route — only admins
-router.get("/admin/dashboard", authenticate, authorize("admin"), (_req, res) => {
-  res.json({ message: "Welcome admin" });
-});
+// All routes require authentication
+router.use(authenticate);
 
-// Authorized route — only users
-router.get("/user/dashboard", authenticate, authorize("user"), (_req, res) => {
-  res.json({ message: "Welcome user" });
-});
+router.get(
+  "/",
+  authorize("admin", "super_admin"),
+  asyncHandler(async (_req, res) => {
+    const users = await getAllUsers();
+    res.status(200).json({ users });
+  }),
+);
 
+router.get(
+  "/:id",
+  authorize("admin", "super_admin"),
+  asyncHandler(async (req, res) => {
+    const user = await getUserById(req.params.id);
+    res.status(200).json({ user });
+  }),
+);
+
+router.post(
+  "/",
+  authorize("admin", "super_admin"),
+  asyncHandler(async (req: AuthRequest, res) => {
+    const body = validate(createUserDTO, req.body);
+
+    if (["admin", "super_admin"].includes(body.role) && req.user.role !== "super_admin") {
+      return res
+        .status(403)
+        .json({ message: "Only super admins can create admin or super admin users" });
+    }
+
+    const user = await createUser(body);
+    res.status(201).json({ user });
+    return;
+  }),
+);
+
+router.patch(
+  "/:id",
+  authorize("admin", "super_admin"),
+  asyncHandler(async (req: AuthRequest, res) => {
+    const body = validate(updateUserDTO, req.body);
+
+    // Only super_admin can promote to admin
+    if (body.role === "admin" && req.user.role !== "super_admin") {
+      return res.status(403).json({ message: "Only super admins can assign admin role" });
+    }
+
+    const user = await updateUser(req.params.id, body, req.user);
+    res.status(200).json({ user });
+    return;
+  }),
+);
+
+router.delete(
+  "/:id",
+  authorize("super_admin"),
+  asyncHandler(async (req: AuthRequest, res) => {
+    // Prevent self-deletion
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ message: "Cannot delete your own account" });
+    }
+
+    await deleteUser(req.params.id);
+    res.status(200).json({ message: "User deleted" });
+    return;
+  }),
+);
 
 export default router;

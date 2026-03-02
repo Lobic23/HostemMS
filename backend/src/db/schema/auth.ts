@@ -9,7 +9,9 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
 export type UsersDB = typeof users.$inferSelect;
+export type UserResponse = Omit<UsersDB, "pwdHash">;
 
 // we make a 1 to many map of user to refresh_tokens to allow 
 // multi device sessions

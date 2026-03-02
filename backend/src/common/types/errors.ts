@@ -27,6 +27,10 @@ export class AppError extends Error {
   }
 
   static invalid(message = "Validation failed") {
-    return new AppError(404, message);
+    return new AppError(400, message);
+  }
+
+  static conflict(message= "Conflicting request"){
+    return new AppError(409, message);
   }
 }

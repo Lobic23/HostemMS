@@ -1,12 +1,12 @@
 import { and, eq } from "drizzle-orm";
-import { v4 as uuidv4 } from "uuid";
+import { nanoid } from 'nanoid'
 
 import { hashPassword, comparePassword } from "./utils/hashPwd";
 import { generateAccessToken, generateRefreshToken } from "./utils/tokens";
 import jwt from "jsonwebtoken";
 import { hashRefreshToken as hashToken } from "./utils/hashToken";
 import { JwtPayload } from "@/common/middleware/auth";
-import { db, users, type UsersDB, refreshTokens } from "db";
+import { db, users, type UsersDB, refreshTokens, type UserResponse } from "db";
 import { env } from "@/config/env";
 import { tokensExpiryInSex } from "@/config/tokenExpiry";
 
@@ -16,12 +16,19 @@ export const registerUser = async (name: string, email: string, password: string
   if (existing.length) throw new Error("User already exists");
 
   const hashed = await hashPassword(password);
-  const id: string = uuidv4();
+
+  const id: string = nanoid();
 
   await db.insert(users).values({ id, name, email, pwdHash: hashed });
 };
-
-export const loginUser = async (email: string, password: string) => {
+export const loginUser = async (
+  email: string,
+  password: string,
+): Promise<{
+  user: UserResponse;
+  accessToken: string;
+  refreshToken: string;
+}> => {
   const user = await db.select().from(users).where(eq(users.email, email));
 
   if (!user.length) throw new Error("Invalid credentials");
@@ -46,8 +53,9 @@ export const loginUser = async (email: string, password: string) => {
     tokenHash: hashToken(refreshToken),
     expiresAt: new Date(Date.now() + tokensExpiryInSex.REFRESH * 1000),
   });
+  const { pwdHash, ...safeUser } = currUser;
 
-  return { accessToken, refreshToken };
+  return { user: safeUser, accessToken, refreshToken };
 };
 
 export const refreshUserToken = async (refreshToken: string) => {
@@ -87,7 +95,6 @@ export const refreshUserToken = async (refreshToken: string) => {
 
         throw new Error("Refresh token expired");
       }
-
 
       // Rotate: delete old token
       await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored[0].id));
