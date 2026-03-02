@@ -28,7 +28,7 @@ const createApp = (): Express => {
   app.use(express.urlencoded({ extended: true })); //name=Sadit&age=20 -> { name: "Sadit", age: "20" }
   app.use(logger);
 
-  // app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // no ddos for you bijan
+  app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // no ddos for you bijan
 
   app.get("/", (_req, res) => res.status(200).json({ message: "Hello World" }));
 

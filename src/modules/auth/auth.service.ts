@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { nanoid } from 'nanoid'
+import { v4 as uuidv4 } from 'uuid';
 
 import { hashPassword, comparePassword } from "./utils/hashPwd";
 import { generateAccessToken, generateRefreshToken } from "./utils/tokens";
@@ -17,7 +17,7 @@ export const registerUser = async (name: string, email: string, password: string
 
   const hashed = await hashPassword(password);
 
-  const id: string = nanoid();
+  const id: string = uuidv4();
 
   await db.insert(users).values({ id, name, email, pwdHash: hashed });
 };

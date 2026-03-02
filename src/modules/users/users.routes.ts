@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "@/common/utils/asyncHandler";
 import { validate } from "@/common/utils/zodValidate";
-import { authenticate, authorize, AuthRequest } from "@/common/middleware/auth";
+import { authenticate, authorizeRoles, AuthRequest } from "@/common/middleware/auth";
 import { getAllUsers, getUserById, createUser, updateUser, deleteUser } from "./user.service";
 
 const router = Router();
@@ -26,7 +26,7 @@ router.use(authenticate);
 
 router.get(
   "/",
-  authorize("admin", "super_admin"),
+  authorizeRoles("admin", "super_admin"),
   asyncHandler(async (_req, res) => {
     const users = await getAllUsers();
     res.status(200).json({ users });
@@ -35,7 +35,7 @@ router.get(
 
 router.get(
   "/:id",
-  authorize("admin", "super_admin"),
+  authorizeRoles("admin", "super_admin"),
   asyncHandler(async (req, res) => {
     const user = await getUserById(req.params.id);
     res.status(200).json({ user });
@@ -44,7 +44,7 @@ router.get(
 
 router.post(
   "/",
-  authorize("admin", "super_admin"),
+  authorizeRoles("admin", "super_admin"),
   asyncHandler(async (req: AuthRequest, res) => {
     const body = validate(createUserDTO, req.body);
 
@@ -62,7 +62,7 @@ router.post(
 
 router.patch(
   "/:id",
-  authorize("admin", "super_admin"),
+  authorizeRoles("admin", "super_admin"),
   asyncHandler(async (req: AuthRequest, res) => {
     const body = validate(updateUserDTO, req.body);
 
@@ -79,7 +79,7 @@ router.patch(
 
 router.delete(
   "/:id",
-  authorize("super_admin"),
+  authorizeRoles("super_admin"),
   asyncHandler(async (req: AuthRequest, res) => {
     // Prevent self-deletion
     if (req.params.id === req.user.id) {

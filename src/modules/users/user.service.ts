@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { AppError } from "@/common/types/errors";
 import { JwtPayload, ROLE_HIERARCHY } from "@/common/middleware/auth";
-import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from 'uuid';
 import { db, users } from "db";
 import { hashPassword } from "../auth/utils/hashPwd";
 
@@ -43,7 +43,7 @@ export async function createUser(data: {
   if (existing.length > 0) throw AppError.conflict("Email already in use");
 
   const pwdHash = await hashPassword(data.password);
-  const id = nanoid();
+  const id = uuidv4();
 
   const [user] = await db
     .insert(users)
