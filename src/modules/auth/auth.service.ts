@@ -1,45 +1,50 @@
 import { and, eq } from "drizzle-orm";
-
-import { comparePassword } from "./utils/hashPwd";
-import { generateAccessToken, generateRefreshToken } from "./utils/tokens";
+import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+
+import { comparePassword, hashPassword } from "./utils/hashPwd";
+import { generateAccessToken, generateRefreshToken } from "./utils/tokens";
 import { hashRefreshToken as hashToken } from "./utils/hashToken";
 import { JwtPayload } from "@/common/middleware/auth";
-import { db, users, type UsersDB, refreshTokens, type UserResponse } from "db";
 import { env } from "@/config/env";
 import { tokensExpiryInSex } from "@/config/tokenExpiry";
-import { createAccount } from "../users/user.service";
+import { db, refreshTokens } from "db";
+import { Role, UserResponse, users, usersSafeSelect } from "db/schema/users";
+import { AppError } from "@/common/types/errors";
 
 export const registerUser = async (name: string, email: string, password: string) => {
-  return createAccount(name,email,password,"user");
+  const existing = await db.select().from(users).where(eq(users.email, email));
+  if (existing.length > 0) throw AppError.conflict("Email already in use");
+
+  const pwdHash = await hashPassword(password);
+  const id = uuidv4();
+  const role: Role = "student";
+
+  const [user] = await db.insert(users).values({ id, name, email, pwdHash, role }).returning(usersSafeSelect);
+
+  return user;
 };
 
 export const loginUser = async (
   email: string,
   password: string,
-): Promise<{
-  user: UserResponse;
-  accessToken: string;
-  refreshToken: string;
-}> => {
-  const user = await db.select().from(users).where(eq(users.email, email));
-  if (!user.length) throw new Error("Invalid credentials");
-  const currUser: UsersDB = user[0];
+): Promise<{ user: UserResponse; accessToken: string; refreshToken: string }> => {
+  const [currUser] = await db.select().from(users).where(eq(users.email, email));
+
+  if (!currUser) throw AppError.unauthorized("Invalid credentials");
+
   const valid = await comparePassword(password, currUser.pwdHash);
-  if (!valid) throw new Error("Invalid credentials");
-  const accessToken = generateAccessToken({
-    id: currUser.id,
-    role: currUser.role,
-  });
-  const refreshToken = generateRefreshToken({
-    id: currUser.id,
-    role: currUser.role,
-  });
+  if (!valid) throw AppError.unauthorized("Invalid credentials");
+
+  const accessToken = generateAccessToken({ id: currUser.id, role: currUser.role });
+  const refreshToken = generateRefreshToken({ id: currUser.id, role: currUser.role });
+
   await db.insert(refreshTokens).values({
     userId: currUser.id,
     tokenHash: hashToken(refreshToken),
     expiresAt: new Date(Date.now() + tokensExpiryInSex.REFRESH * 1000),
   });
+
   const { pwdHash, ...safeUser } = currUser;
   return { user: safeUser, accessToken, refreshToken };
 };
@@ -49,52 +54,40 @@ export const refreshUserToken = async (refreshToken: string) => {
 
   try {
     const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET);
-
     if (typeof decoded === "string" || !decoded.id || !decoded.role) {
-      throw new Error("Invalid refresh token");
+      throw new Error();
     }
-
     decodedUser = decoded as JwtPayload;
   } catch {
-    throw new Error("Invalid refresh token");
+    throw AppError.unauthorized("Invalid refresh token");
   }
 
   const hashed = hashToken(refreshToken);
 
-  const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await db.transaction(async (tx) => {
-    const stored = await tx
+  return db.transaction(async (tx) => {
+    const [stored] = await tx
       .select()
       .from(refreshTokens)
       .where(and(eq(refreshTokens.userId, decodedUser.id), eq(refreshTokens.tokenHash, hashed)));
 
-    // Token not found — possible reuse: revoke all sessions for this user
-    if (!stored.length) {
+    if (!stored) {
+      // Token not found — possible reuse: revoke all sessions
       await tx.delete(refreshTokens).where(eq(refreshTokens.userId, decodedUser.id));
-      throw new Error("Refresh token reuse detected");
+      throw AppError.unauthorized("Refresh token reuse detected");
     }
 
-    // Check DB-level expiry (belt-and-suspenders alongside JWT expiry)
-    if (stored[0].expiresAt < new Date()) {
-      await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored[0].id));
-      throw new Error("Refresh token expired");
+    if (stored.expiresAt < new Date()) {
+      await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored.id));
+      throw AppError.unauthorized("Refresh token expired");
     }
 
-    // Rotate: delete old token
-    await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored[0].id));
+    // Rotate: delete old, insert new
+    await tx.delete(refreshTokens).where(eq(refreshTokens.id, stored.id));
 
-    const newAccessToken = generateAccessToken({
-      id: decodedUser.id,
-      role: decodedUser.role,
-    });
+    const newAccessToken = generateAccessToken({ id: decodedUser.id, role: decodedUser.role });
+    const newRefreshToken = generateRefreshToken({ id: decodedUser.id, role: decodedUser.role });
 
-    const newRefreshToken = generateRefreshToken({
-      id: decodedUser.id,
-      role: decodedUser.role,
-    });
-
-    // Insert new token
-
-    await db.insert(refreshTokens).values({
+    await tx.insert(refreshTokens).values({
       userId: decodedUser.id,
       tokenHash: hashToken(newRefreshToken),
       expiresAt: new Date(Date.now() + tokensExpiryInSex.REFRESH * 1000),
@@ -102,15 +95,10 @@ export const refreshUserToken = async (refreshToken: string) => {
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   });
-
-  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 };
 
-export const logoutFromCurrentDevice = async (token: string) => {
-  const hashed = hashToken(token);
-  await db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hashed));
-};
+export const logoutFromCurrentDevice = async (token: string) =>
+  await db.delete(refreshTokens).where(eq(refreshTokens.tokenHash, hashToken(token)));
 
-export const logoutFromAllDevices = async (userId: string) => {
+export const logoutFromAllDevices = async (userId: string) =>
   await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
-};

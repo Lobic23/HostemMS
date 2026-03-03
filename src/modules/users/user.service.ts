@@ -1,34 +1,19 @@
+import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
+
 import { AppError } from "@/common/types/errors";
-import { JwtPayload, ROLE_HIERARCHY } from "@/common/middleware/auth";
-import { v4 as uuidv4 } from 'uuid';
-import { db, users } from "db";
+import { JwtPayload } from "@/common/middleware/auth";
+import { db } from "db";
 import { hashPassword } from "../auth/utils/hashPwd";
+import { Role, usersSafeSelect, users } from "db/schema/users";
+import { getRoleLevel } from "@/common/middleware/rbac";
 
 export async function getAllUsers() {
-  return db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      role: users.role,
-      createdAt: users.createdAt,
-    })
-    .from(users);
+  return db.select(usersSafeSelect).from(users);
 }
 
 export async function getUserById(id: string) {
-  const [user] = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      role: users.role,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(eq(users.id, id));
-
+  const [user] = await db.select(usersSafeSelect).from(users).where(eq(users.id, id));
   if (!user) throw AppError.notFound("User not found");
   return user;
 }
@@ -37,10 +22,16 @@ export async function createAccount(
   name: string,
   email: string,
   password: string,
-  role:string = "user",
+  role: Role = "student",
+  requester: JwtPayload,
 ) {
   const existing = await db.select().from(users).where(eq(users.email, email));
   if (existing.length > 0) throw AppError.conflict("Email already in use");
+
+  // Can't create a user with role >= your own
+  if (getRoleLevel(role) >= getRoleLevel(requester.role as Role)) {
+    throw AppError.forbidden("Cannot create a user with equal or higher role than your own");
+  }
 
   const pwdHash = await hashPassword(password);
   const id = uuidv4();
@@ -48,24 +39,39 @@ export async function createAccount(
   const [user] = await db
     .insert(users)
     .values({ id, name, email, pwdHash, role })
-    .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
+    .returning(usersSafeSelect);
 
   return user;
 }
 
 export async function updateUser(
   targetId: string,
-  data: { name?: string; email?: string; password?: string; role?: string },
+  data: { name?: string; email?: string; password?: string; role?: Role },
   requester: JwtPayload,
 ) {
   const [target] = await db.select().from(users).where(eq(users.id, targetId));
   if (!target) throw AppError.notFound("User not found");
 
-  // Admins cannot edit other admins or super_admins
-  const requesterLevel = ROLE_HIERARCHY[requester.role] ?? -1;
-  const targetLevel = ROLE_HIERARCHY[target.role] ?? -1;
-  if (requesterLevel <= targetLevel && requester.id !== targetId) {
+  const requesterLevel = getRoleLevel(requester.role as Role);
+  const targetLevel = getRoleLevel(target.role);
+  const isSelf = requester.id === targetId;
+
+  // Can't touch users at same level or above (unless editing yourself)
+  if (!isSelf && requesterLevel <= targetLevel) {
     throw AppError.forbidden("Cannot edit a user with equal or higher role");
+  }
+
+  // Can't assign a role equal to or above your own
+  if (data.role !== undefined) {
+    const newRoleLevel = getRoleLevel(data.role);
+    if (newRoleLevel >= requesterLevel) {
+      throw AppError.forbidden("Cannot assign a role equal to or above your own");
+    }
+
+    // Can't demote yourself
+    if (isSelf) {
+      throw AppError.forbidden("Cannot change your own role");
+    }
   }
 
   const updates: Partial<typeof users.$inferInsert> = {};
@@ -78,13 +84,29 @@ export async function updateUser(
     .update(users)
     .set(updates)
     .where(eq(users.id, targetId))
-    .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
+    .returning(usersSafeSelect);
 
   return updated;
 }
 
-export async function deleteUser(id: string) {
-  const [deleted] = await db.delete(users).where(eq(users.id, id)).returning({ id: users.id });
-  if (!deleted) throw AppError.notFound("User not found");
+export async function deleteUser(targetId: string, requester: JwtPayload) {
+  // Self-deletion blocked in service, not router
+  if (requester.id === targetId) {
+    throw AppError.forbidden("Cannot delete your own account");
+  }
+
+  const [target] = await db.select().from(users).where(eq(users.id, targetId));
+  if (!target) throw AppError.notFound("User not found");
+
+  // Any role strictly above the target can delete
+  if (getRoleLevel(requester.role as Role) <= getRoleLevel(target.role)) {
+    throw AppError.forbidden("Cannot delete a user with equal or higher role");
+  }
+
+  const [deleted] = await db
+    .delete(users)
+    .where(eq(users.id, targetId))
+    .returning({ id: users.id });
+
   return deleted;
 }

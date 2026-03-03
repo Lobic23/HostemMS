@@ -3,12 +3,6 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "../types/errors";
 
-export const ROLE_HIERARCHY: Record<string, number> = {
-  user: 0,
-  admin: 1,
-  super_admin: 2,
-};
-
 export interface AuthRequest extends Request {
   user?: any;
 }
@@ -40,35 +34,4 @@ export const authenticate = (req: AuthRequest, _res: Response, next: NextFunctio
   }
 };
 
-export const authorizeRoles =
-  (...allowed: string[]) =>
-  (req: AuthRequest, _res: Response, next: NextFunction) => {
-    if (!req.user) {
-      next(AppError.unauthorized());
-      return;
-    }
 
-    if (!allowed.includes(req.user.role)) {
-      next(AppError.forbidden("Insufficient role"));
-      return;
-    }
-
-    next();
-  };
-
-export const authorizeMinRole = (minRole: string) => (req: AuthRequest, _res: Response, next: NextFunction) => {
-  if (!req.user) {
-    next(AppError.unauthorized());
-    return;
-  }
-
-  const userLevel = ROLE_HIERARCHY[req.user.role] ?? -1;
-  const requiredLevel = ROLE_HIERARCHY[minRole] ?? 0;
-
-  if (userLevel < requiredLevel) {
-    next(AppError.forbidden("Insufficient privileges"));
-    return;
-  }
-
-  next();
-};
