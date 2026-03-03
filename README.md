@@ -1,38 +1,127 @@
-## Entry Flow
 
-    server.ts → app.ts → routes.ts → modules
+### 1️⃣ Project Setup
 
-## Layer Responsibilities
+* [X] Init Node.js + TypeScript project
+* [X] Setup folder structure (modules, core, shared)
+* [X] Configure ESLint + Prettier
+* [X] Setup env config (.env, validation)
+* [X] Setup PostgreSQL
+* [X] Setup ORM (Prisma / Drizzle)
+* [X] Add migration system
+---
 
-    server.ts => Boots the app. Loads config, starts HTTP listener.
-    app.ts => Wires up Express. Registers global middleware (cors, json, morgan)and mounts the root router.
+### 2️⃣ Core Infrastructure
 
-## Module Structure
+* [X] Global error handler
+* [X] Request validation (Zod / class-validator)
+* [X] Rate limiter
+* [X] CORS + Helmet
+* [X] Health check endpoint
+---
 
-Each module is self-contained and owns its vertical slice.
+### 3️⃣ Auth & RBAC
 
-```
-user/
-	index.ts       — public API of the module, re-exports what other modules need
-	routes.ts      — maps HTTP verbs + URLs to controller methods
-	controller.ts  — handles req/res, calls service, returns response
-	service.ts     — business logic, validation, orchestration
-	types.ts       — DTOs (request/response shapes)
-```
+* [X] User entity
+* [ ] Role entity
+* [ ] Permission entity
+* [X] JWT access token
+* [X] Refresh token (rotation)
+* [ ] Refresh token (revocation)
+* [X] Password hashing (bcrypt/argon2)
+* [ ] Role middleware guard
+* [ ] Audit log for auth actions
 
-### Data Flow
+---
 
-Request → router → controller → service → db → service → controller → response
+### 4️⃣ Hostel Module
 
-### Rule of thumb
+* [ ] Building entity
+* [ ] Room entity
+* [ ] Bed entity
+* [ ] Student entity
+* [ ] Allocation entity
+* [ ] Complaint entity
+* [ ] CRUD APIs
+* [ ] Room availability logic
+* [ ] Allocation transaction-safe logic
 
-- Controller knows about HTTP (req, res). Nothing else does.
-- Service knows about business rules. Not HTTP, not SQL.
-- DB queries live in the service (or a repository if queries get complex).
-- index.ts only exports, never implements.
+---
 
-## DATABASE (postgres/neon)
+### 5️⃣ Canteen Module
 
-1. Define schema in src/db/schema.ts
-2. generate migration sql by 'bun db:generate' , will generate db/migrations/\*.sql
-3. apply migration to db using 'bun db:migrate'
+* [ ] Meal plan entity
+* [ ] Subscription entity
+* [ ] Menu entity
+* [ ] Attendance entity
+* [ ] Billing logic
+* [ ] CRUD APIs
+* [ ] Subscription expiry check
+
+---
+
+### 6️⃣ Gym Module
+
+* [ ] Membership plan entity
+* [ ] Member entity
+* [ ] Attendance entity
+* [ ] Equipment entity
+* [ ] Maintenance log entity
+* [ ] Membership expiry automation
+
+---
+
+### 7️⃣ Social Hall Module
+
+* [ ] Hall entity
+* [ ] Booking entity
+* [ ] Time slot validation
+* [ ] Conflict detection logic
+* [ ] Cancellation logic
+
+---
+
+### 8️⃣ Billing System
+
+* [ ] Invoice entity
+* [ ] Payment entity
+* [ ] Unified billing logic
+* [ ] Partial payment handling
+* [ ] Transaction-safe payment processing
+
+---
+
+### 9️⃣ Background Jobs
+
+* [ ] Setup Redis
+* [ ] Setup queue (BullMQ)
+* [ ] Expiry checks job
+* [ ] Invoice generation job
+* [ ] Notification job
+
+---
+
+### 🔟 Logging & Monitoring
+
+* [ ] Structured logs
+* [ ] Request ID middleware
+* [ ] Audit log table
+* [ ] Error tracking (Sentry optional)
+
+---
+
+### 1️⃣1️⃣ Testing
+
+* [ ] Unit tests (services)
+* [ ] Integration tests (API + DB)
+* [ ] RBAC permission tests
+
+---
+
+### 1️⃣2️⃣ Production Ready
+
+* [ ] API versioning (/api/v1)
+* [ ] Pagination everywhere
+* [ ] Index DB columns
+* [ ] CI/CD setup
+* [ ] Staging + production configs
+

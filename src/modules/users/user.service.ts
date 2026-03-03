@@ -33,21 +33,21 @@ export async function getUserById(id: string) {
   return user;
 }
 
-export async function createUser(data: {
-  name: string;
-  email: string;
-  password: string;
-  role: string;
-}) {
-  const existing = await db.select().from(users).where(eq(users.email, data.email));
+export async function createAccount(
+  name: string,
+  email: string,
+  password: string,
+  role:string = "user",
+) {
+  const existing = await db.select().from(users).where(eq(users.email, email));
   if (existing.length > 0) throw AppError.conflict("Email already in use");
 
-  const pwdHash = await hashPassword(data.password);
+  const pwdHash = await hashPassword(password);
   const id = uuidv4();
 
   const [user] = await db
     .insert(users)
-    .values({ id, name: data.name, email: data.email, pwdHash, role: data.role })
+    .values({ id, name, email, pwdHash, role })
     .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
 
   return user;

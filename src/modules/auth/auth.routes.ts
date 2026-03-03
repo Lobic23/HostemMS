@@ -16,7 +16,6 @@ import { authenticate, AuthRequest } from "@/common/middleware/auth";
 const registerDTO = z.object({
   name: z.string().min(1, "Name is required").max(100),
   email: z.email("Invalid email address"),
-  // password: z.string().min(1, "Password must be at least 8 characters").max(128),
   password: z.string().min(8, "Password must be at least 8 characters").max(128),
 });
 

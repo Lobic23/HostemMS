@@ -3,7 +3,7 @@ import { z } from "zod";
 import { asyncHandler } from "@/common/utils/asyncHandler";
 import { validate } from "@/common/utils/zodValidate";
 import { authenticate, authorizeRoles, AuthRequest } from "@/common/middleware/auth";
-import { getAllUsers, getUserById, createUser, updateUser, deleteUser } from "./user.service";
+import { getAllUsers, getUserById, createAccount, updateUser, deleteUser } from "./user.service";
 
 const router = Router();
 
@@ -54,7 +54,7 @@ router.post(
         .json({ message: "Only super admins can create admin or super admin users" });
     }
 
-    const user = await createUser(body);
+    const user = await createAccount(body);
     res.status(201).json({ user });
     return;
   }),
