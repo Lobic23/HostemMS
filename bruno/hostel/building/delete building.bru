@@ -1,0 +1,24 @@
+meta {
+  name: delete building
+  type: http
+  seq: 4
+}
+
+delete {
+  url: http://localhost:8000/hostel/buildings/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: a97249e6-61c0-46b7-88cb-8e2b325b1cc1
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

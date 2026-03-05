@@ -1,0 +1,24 @@
+meta {
+  name: add bed
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8000/hostel/beds
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  { "roomId": "5b29f506-fe76-457c-9a9d-5ad465012559", "label": "A" }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

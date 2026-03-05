@@ -1,0 +1,30 @@
+meta {
+  name: allocations
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8000/hostel/allocations
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  {
+    "userId": "139c8cfd-6389-4a78-8b4b-089a31935144",
+    "bedId": "811438bf-3494-4a48-b577-8262aff72219",
+    "startDate": "2026-03-05T00:00:00.000Z",
+    "endDate": "2026-06-01T00:00:00.000Z",
+    "notes": "Test allocation"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

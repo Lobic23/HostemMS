@@ -1,0 +1,30 @@
+meta {
+  name: delete bed
+  type: http
+  seq: 5
+}
+
+delete {
+  url: http://localhost:8000/hostel/beds/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 811438bf-3494-4a48-b577-8262aff72219
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  { "status": "available" }
+  
+  //status options: available | maintenance | retired
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

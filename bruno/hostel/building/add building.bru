@@ -1,0 +1,29 @@
+meta {
+  name: add building
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8000/hostel/buildings
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  {
+    "name": "Block A",
+    "code": "BLK-A",
+    "totalFloors": 5,
+    "housingGender": "male"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

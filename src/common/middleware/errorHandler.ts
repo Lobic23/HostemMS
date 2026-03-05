@@ -44,8 +44,5 @@ export const errorHandler = (err: unknown, req: Request, res: Response, _next: N
   res.status(500).json({
     status: "error",
     message: "Internal server error",
-    ...(env.isDevelopment && {
-      stack: err instanceof Error ? err.stack : undefined,
-    }),
   });
 };

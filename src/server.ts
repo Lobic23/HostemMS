@@ -8,7 +8,7 @@ import { errorHandler } from "@/common/middleware/errorHandler";
 import authRoutes from "@/modules/auth/auth.routes";
 import healthRoutes from "@/modules/health/health.routes";
 import userRoutes from "@/modules/users/users.routes";
-// import hostelRoutes from "@/modules/hostel/hostel.routes";
+import hostelRoutes from "@/modules/hostel/hostel.routes";
 import { httpLogger } from "@/common/middleware/httpLogger";
 
 const createApp = (): Express => {
@@ -41,7 +41,7 @@ const createApp = (): Express => {
 
   app.use("/users", userRoutes);
 
-  // app.use("/hostel", hostelRoutes);
+  app.use("/hostel", hostelRoutes);
 
   // Error handling (must be last)
   app.use(errorHandler);

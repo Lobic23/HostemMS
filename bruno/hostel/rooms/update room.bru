@@ -1,0 +1,31 @@
+meta {
+  name: update room
+  type: http
+  seq: 6
+}
+
+patch {
+  url: http://localhost:8000/hostel/rooms/:id
+  body: json
+  auth: bearer
+}
+
+params:path {
+  id: 5b29f506-fe76-457c-9a9d-5ad465012559
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  {
+    "capacity": 4,
+    "isActive": true
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
