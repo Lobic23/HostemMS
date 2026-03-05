@@ -6,7 +6,7 @@ import { validate } from "@/common/utils/zodValidate";
 import { authenticate, AuthRequest } from "@/common/middleware/auth";
 import { getAllUsers, getUserById, createAccount, updateUser, deleteUser } from "./user.service";
 import { requireRole, requireOwnerOrRole } from "@/common/middleware/rbac";
-import { ROLES } from "db/schema/users"; 
+import { ROLES } from "db/schema/users";
 
 const createUserDTO = z.object({
   name: z.string().min(1).max(100),

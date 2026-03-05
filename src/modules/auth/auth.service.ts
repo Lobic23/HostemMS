@@ -49,6 +49,12 @@ export const loginUser = async (
   return { user: safeUser, accessToken, refreshToken };
 };
 
+export async function getuserById(id: string) {
+  const [user] = await db.select(usersSafeSelect).from(users).where(eq(users.id, id));
+  if (!user) throw AppError.notFound("User not found");
+  return user;
+}
+
 export const refreshUserToken = async (refreshToken: string) => {
   let decodedUser: JwtPayload;
 

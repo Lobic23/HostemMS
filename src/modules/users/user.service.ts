@@ -36,10 +36,7 @@ export async function createAccount(
   const pwdHash = await hashPassword(password);
   const id = uuidv4();
 
-  const [user] = await db
-    .insert(users)
-    .values({ id, name, email, pwdHash, role })
-    .returning(usersSafeSelect);
+  const [user] = await db.insert(users).values({ id, name, email, pwdHash, role }).returning(usersSafeSelect);
 
   return user;
 }
@@ -80,11 +77,7 @@ export async function updateUser(
   if (data.role) updates.role = data.role;
   if (data.password) updates.pwdHash = await hashPassword(data.password);
 
-  const [updated] = await db
-    .update(users)
-    .set(updates)
-    .where(eq(users.id, targetId))
-    .returning(usersSafeSelect);
+  const [updated] = await db.update(users).set(updates).where(eq(users.id, targetId)).returning(usersSafeSelect);
 
   return updated;
 }
@@ -103,10 +96,7 @@ export async function deleteUser(targetId: string, requester: JwtPayload) {
     throw AppError.forbidden("Cannot delete a user with equal or higher role");
   }
 
-  const [deleted] = await db
-    .delete(users)
-    .where(eq(users.id, targetId))
-    .returning({ id: users.id });
+  const [deleted] = await db.delete(users).where(eq(users.id, targetId)).returning({ id: users.id });
 
   return deleted;
 }

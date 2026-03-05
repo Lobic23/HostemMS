@@ -7,6 +7,7 @@ import {
   refreshUserToken,
   logoutFromCurrentDevice,
   logoutFromAllDevices,
+  getuserById,
 } from "./auth.service";
 import { asyncHandler } from "@/common/utils/asyncHandler";
 import { AppError } from "@/common/types/errors";
@@ -46,7 +47,7 @@ const router = Router();
 
       const result = await loginUser(email, password);
 
-      res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken , user: result.user});
+      res.status(200).json({ accessToken: result.accessToken, refreshToken: result.refreshToken, user: result.user });
       //  cookie should have been enough but as we want a flutter app
       //  we also need to pass the refreshToken throught the respose
     }),
@@ -83,6 +84,15 @@ const router = Router();
       await logoutFromAllDevices((req as AuthRequest).user.id);
 
       res.status(200).json({ message: "Logged out from all devices" });
+    }),
+  );
+
+  router.get(
+    // requires acess token
+    "/me",
+    authenticate,
+    asyncHandler(async (req, res) => {
+      res.json({ user: await getuserById((req as AuthRequest).user.id) });
     }),
   );
 }

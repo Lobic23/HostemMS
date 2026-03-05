@@ -28,7 +28,7 @@
 * [X] Refresh token (rotation)
 * [ ] Refresh token (revocation)
 * [X] Password hashing (bcrypt/argon2)
-* [ ] Role middleware guard
+* [X] Role middleware guard
 * [ ] Audit log for auth actions
 
 ---

@@ -1,13 +1,15 @@
-import { env } from "@/config/env";
 import express, { Express } from "express";
 import cors from "cors";
-import { errorHandler } from "./common/middleware/errorHandler";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import authRoutes from "./modules/auth/auth.routes";
-import healthRoutes from "./modules/health/health.routes";
-import userRoutes from "./modules/users/users.routes";
-import { logger } from "./common/middleware/logger";
+
+import { env } from "@/config/env";
+import { errorHandler } from "@/common/middleware/errorHandler";
+import authRoutes from "@/modules/auth/auth.routes";
+import healthRoutes from "@/modules/health/health.routes";
+import userRoutes from "@/modules/users/users.routes";
+// import hostelRoutes from "@/modules/hostel/hostel.routes";
+import { httpLogger } from "@/common/middleware/httpLogger";
 
 const createApp = (): Express => {
   const app = express();
@@ -26,9 +28,10 @@ const createApp = (): Express => {
 
   app.use(express.json()); // parse incomming req to json  { "name": "Sadit" } -> req.body.name:"Sadit"
   app.use(express.urlencoded({ extended: true })); //name=Sadit&age=20 -> { name: "Sadit", age: "20" }
-  app.use(logger);
 
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // no ddos for you bijan
+
+  app.use(httpLogger);
 
   app.get("/", (_req, res) => res.status(200).json({ message: "Hello World" }));
 
@@ -37,6 +40,8 @@ const createApp = (): Express => {
   app.use("/auth", authRoutes);
 
   app.use("/users", userRoutes);
+
+  // app.use("/hostel", hostelRoutes);
 
   // Error handling (must be last)
   app.use(errorHandler);

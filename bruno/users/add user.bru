@@ -1,0 +1,29 @@
+meta {
+  name: add user
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8000/users
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEzOWM4Y2ZkLTYzODktNGE3OC04YjRiLTA4OWEzMTkzNTE0NCIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc3MjY4NTI4OSwiZXhwIjoxNzcyNzcxNjg5fQ.BAaVKlYGvl0xL8RrF9fLHDcKdQ3vj8JWennXwH3HLwY
+}
+
+body:json {
+  {
+    "name": "John Smith",
+    "email": "john.smith@email.com",
+    "password": "Password123!",
+    "role": "student"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
